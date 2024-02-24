@@ -18,6 +18,10 @@ type Querier interface {
 	Query(ctx context.Context, query string, args ...interface{}) (pgx.Rows, error)
 }
 
+type Goqu interface {
+	ToSQL() (sql string, params []interface{}, err error)
+}
+
 var (
 	_ Querier = &pgxpool.Pool{}
 	_ Querier = &pgx.Conn{}
@@ -30,9 +34,29 @@ func Select(ctx context.Context, db Querier, dst interface{}, query string, args
 	return DefaultAPI.Select(ctx, db, dst, query, args...)
 }
 
+// Select is a package-level helper function that uses the DefaultAPI object.
+// See API.Select for details.
+func SelectGoqu(ctx context.Context, db Querier, dst interface{}, goqu Goqu) error {
+	query, args, err := goqu.ToSQL()
+	if err != nil {
+		return err
+	}
+	return DefaultAPI.Select(ctx, db, dst, query, args...)
+}
+
 // Get is a package-level helper function that uses the DefaultAPI object.
 // See API.Get for details.
 func Get(ctx context.Context, db Querier, dst interface{}, query string, args ...interface{}) error {
+	return DefaultAPI.Get(ctx, db, dst, query, args...)
+}
+
+// Get is a package-level helper function that uses the DefaultAPI object.
+// See API.Get for details.
+func GetGoqu(ctx context.Context, db Querier, dst interface{}, goqu Goqu) error {
+	query, args, err := goqu.ToSQL()
+	if err != nil {
+		return err
+	}
 	return DefaultAPI.Get(ctx, db, dst, query, args...)
 }
 
